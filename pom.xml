@@ -65,6 +65,13 @@
 				<enabled>false</enabled>
 			</releases>
 		</repository>
+		<repository>
+			<id>github</id>
+			<url>https://maven.pkg.github.com/le-campus-numerique/*</url>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
 	</repositories>
 	<pluginRepositories>
 		<pluginRepository>

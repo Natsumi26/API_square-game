@@ -1,4 +1,4 @@
-package com.square_games.api;
+package com.square_games.api.firstStep;
 
 import org.springframework.stereotype.Service;
 
