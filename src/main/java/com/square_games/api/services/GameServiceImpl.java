@@ -11,39 +11,26 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
-public class GameServiceImpl implements GameService {
+public class GameServiceImpl implements GameService  {
 
     private final Map<UUID, Game> games = new HashMap<>();
-    private final Map<String, GameFactory> gameFactories;
+    private final List<GamePlugin> gamePlugins;
 
-    public GameServiceImpl(List<GameFactory> gameFactories) {
-        this.gameFactories = gameFactories.stream()
-                .collect(Collectors.toMap(
-                        GameFactory::getGameFactoryId,
-                        Function.identity()
-                ));
+    public GameServiceImpl(List<GamePlugin> gamePlugins) {
+        this.gamePlugins = gamePlugins;
     }
 
 
     @Override
     public Game createGame(GameCreationParams params) {
 
-        GameFactory factory = gameFactories.get(params.getType());
+        GamePlugin plugin = gamePlugins.stream()
+                .filter(p -> p.getClass().getSimpleName()
+                        .equalsIgnoreCase(params.getType() + "Plugin"))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Type de jeu inconnu"));
 
-        if(factory == null) {
-            throw new IllegalArgumentException(
-                    "unknown game type: " + params.getType()
-            );
-        }
-
-        Game game = factory.createGame(
-                params.getPlayerCount(),
-                params.getBoardSize()
-        );
-
-        games.put(game.getId(), game);
-
-        return game;
+        return plugin.createGame(params.getPlayerCount(),  params.getBoardSize());
     }
 
     @Override
