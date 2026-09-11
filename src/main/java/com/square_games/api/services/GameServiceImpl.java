@@ -1,6 +1,7 @@
 package com.square_games.api.services;
 
 import com.square_games.api.DTO.GameCreationParams;
+import com.square_games.api.dao.GameDao;
 import com.square_games.api.plugins.GamePlugin;
 import fr.le_campus_numerique.square_games.engine.Game;
 import fr.le_campus_numerique.square_games.engine.GameStatus;
@@ -11,10 +12,12 @@ import java.util.*;
 @Service
 public class GameServiceImpl implements GameService  {
 
-    private final Map<UUID, Game> games = new HashMap<>();
+    private final GameDao gameDao;
+
     private final List<GamePlugin> gamePlugins;
 
-    public GameServiceImpl(List<GamePlugin> gamePlugins) {
+    public GameServiceImpl(GameDao gameDao, List<GamePlugin> gamePlugins) {
+        this.gameDao = gameDao;
         this.gamePlugins = gamePlugins;
     }
 
@@ -30,30 +33,29 @@ public class GameServiceImpl implements GameService  {
 
         Game game = plugin.createGame(params.getPlayerCount(),  params.getBoardSize());
 
-        games.put(game.getId(), game);
+        gameDao.upsert(game);
 
         return game;
     }
 
     @Override
-    public Game getGameById(UUID gameId) {
-        return games.get(gameId);
+    public Game getGameById(String gameId) {
+        return gameDao.findById(gameId);
     }
 
     @Override
-    public GameStatus getGameStatus(UUID gameId) {
+    public GameStatus getGameStatus(String gameId) {
         Game game = getGameById(gameId);
         return game.getStatus();
     }
     @Override
     public Collection<Game> getGames(){
-        return games.values();
+        return gameDao.findAll();
     }
 
     @Override
-    public String deleteGameById(UUID gameId) {
-        games.remove(gameId);
-        return "Game deleted";
+    public void deleteGameById(String gameId) {
+        gameDao.delete(gameId);
     }
 
 }
