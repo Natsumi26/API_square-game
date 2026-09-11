@@ -1,14 +1,12 @@
 package com.square_games.api.services;
 
 import com.square_games.api.DTO.GameCreationParams;
+import com.square_games.api.plugins.GamePlugin;
 import fr.le_campus_numerique.square_games.engine.Game;
-import fr.le_campus_numerique.square_games.engine.GameFactory;
 import fr.le_campus_numerique.square_games.engine.GameStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Service
 public class GameServiceImpl implements GameService  {
@@ -30,7 +28,11 @@ public class GameServiceImpl implements GameService  {
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Type de jeu inconnu"));
 
-        return plugin.createGame(params.getPlayerCount(),  params.getBoardSize());
+        Game game = plugin.createGame(params.getPlayerCount(),  params.getBoardSize());
+
+        games.put(game.getId(), game);
+
+        return game;
     }
 
     @Override

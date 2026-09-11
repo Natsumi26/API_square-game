@@ -2,8 +2,8 @@ package com.square_games.api.DTO;
 
 public class GameCreationParams {
     private String type;
-    private int playerCount;
-    private int boardSize;
+    private Integer playerCount;
+    private Integer boardSize;
 
     public String getType() {
         return type;
@@ -13,19 +13,19 @@ public class GameCreationParams {
         this.type = type;
     }
 
-    public int getPlayerCount() {
+    public Integer getPlayerCount() {
         return playerCount;
     }
 
-    public void setPlayerCount(int playerCount) {
+    public void setPlayerCount(Integer playerCount) {
         this.playerCount = playerCount;
     }
 
-    public int getBoardSize() {
+    public Integer getBoardSize() {
         return boardSize;
     }
 
-    public void setBoardSize(int boardSize) {
+    public void setBoardSize(Integer boardSize) {
         this.boardSize = boardSize;
     }
 }

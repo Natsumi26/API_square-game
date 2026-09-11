@@ -1,8 +1,9 @@
-package com.square_games.api.services;
+package com.square_games.api.plugins;
 
 import fr.le_campus_numerique.square_games.engine.Game;
 import fr.le_campus_numerique.square_games.engine.tictactoe.TicTacToeGameFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Component;
 
 import java.util.Locale;
@@ -10,15 +11,18 @@ import java.util.Locale;
 @Component
 public class TicTacToePlugin implements GamePlugin {
 
+    private final MessageSource messageSource;
+
     private final TicTacToeGameFactory gameFactory;
 
     @Value("${game.tictactoe.default-player-count}")
-    private int defaultPlayerCount;
+    private Integer defaultPlayerCount;
 
     @Value("${game.tictactoe.default-board-size}")
-    private int defaultBoardSize;
+    private Integer defaultBoardSize;
 
-    public TicTacToePlugin(TicTacToeGameFactory gameFactory) {
+    public TicTacToePlugin(MessageSource messageSource, TicTacToeGameFactory gameFactory) {
+        this.messageSource = messageSource;
         this.gameFactory = gameFactory;
     }
 
@@ -37,9 +41,7 @@ public class TicTacToePlugin implements GamePlugin {
 
     @Override
     public String getName(Locale locale) {
-        if(locale.getLanguage().equals(Locale.FRENCH.getLanguage())) {
-            return "Morpion";
-        }
-        return "Tic Tac Toe";
+
+        return messageSource.getMessage("game.tictactoe.name", null, locale);
     }
 }

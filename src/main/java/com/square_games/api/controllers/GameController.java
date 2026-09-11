@@ -23,6 +23,7 @@ public class GameController {
     public Collection<Game> getGames() {
         return gameService.getGames();
     }
+
     @PostMapping
     public Game createGame(@RequestBody GameCreationParams params) {
         return gameService.createGame(params);
