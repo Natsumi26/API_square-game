@@ -1,7 +1,9 @@
 package com.square_games.api.dao;
 
 import fr.le_campus_numerique.square_games.engine.Game;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
 
 import java.util.*;
 

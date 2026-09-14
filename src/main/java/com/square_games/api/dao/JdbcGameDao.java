@@ -1,6 +1,7 @@
 package com.square_games.api.dao;
 
 import fr.le_campus_numerique.square_games.engine.*;
+import org.springframework.context.annotation.Profile;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
