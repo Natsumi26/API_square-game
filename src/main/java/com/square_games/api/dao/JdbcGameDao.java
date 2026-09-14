@@ -11,7 +11,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 
-@Repository
 public class JdbcGameDao implements GameDao {
 
     private final NamedParameterJdbcTemplate jdbcTemplate;
