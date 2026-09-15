@@ -33,7 +33,6 @@ build/
 .vscode/
 
 ### Configuration locale / secrets ###
-application-local.properties
 application-h2.properties
 application-mysql.properties
 .env
