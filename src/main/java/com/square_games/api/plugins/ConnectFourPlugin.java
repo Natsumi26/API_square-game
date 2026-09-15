@@ -7,6 +7,8 @@ import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Component;
 
 import java.util.Locale;
+import java.util.Set;
+import java.util.UUID;
 
 @Component
 public class ConnectFourPlugin implements GamePlugin {
@@ -27,14 +29,14 @@ public class ConnectFourPlugin implements GamePlugin {
     }
 
     @Override
-    public Game createGame(Integer playerCount, Integer boardSize) {
+    public Game createGame(Integer playerCount, Integer boardSize, Set<UUID> playerIds) {
         if(playerCount == null){
             playerCount = defaultPlayerCount;
         }
         if(boardSize == null){
             boardSize = defaultBoardSize;
         }
-        return gameFactory.createGame(playerCount, boardSize);
+        return gameFactory.createGame(boardSize, playerIds);
     }
 
     @Override

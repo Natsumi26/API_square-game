@@ -3,9 +3,10 @@ package com.square_games.api.services;
 import com.square_games.api.DTO.GameCreationParams;
 import com.square_games.api.dao.GameDao;
 import com.square_games.api.plugins.GamePlugin;
-import fr.le_campus_numerique.square_games.engine.Game;
-import fr.le_campus_numerique.square_games.engine.GameStatus;
+import fr.le_campus_numerique.square_games.engine.*;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.*;
 
@@ -23,7 +24,7 @@ public class GameServiceImpl implements GameService  {
 
 
     @Override
-    public Game createGame(GameCreationParams params) {
+    public Game createGame(UUID userId, GameCreationParams params) {
 
         GamePlugin plugin = gamePlugins.stream()
                 .filter(p -> p.getClass().getSimpleName()
@@ -31,31 +32,103 @@ public class GameServiceImpl implements GameService  {
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Type de jeu inconnu"));
 
-        Game game = plugin.createGame(params.getPlayerCount(),  params.getBoardSize());
+        Set<UUID> playerIds = new LinkedHashSet<>();
+        playerIds.add(userId);
 
-        gameDao.upsert(game);
+        if (params.getOpponentIds() != null) {
+            playerIds.addAll(params.getOpponentIds());
+        }
+
+        if (playerIds.size() != params.getPlayerCount()) {
+            throw new IllegalArgumentException(
+                    "Le nombre de joueurs ne correspond pas au playerCount"
+            );
+        }
+
+        Game game = plugin.createGame(params.getPlayerCount(),  params.getBoardSize(), playerIds );
+
+        gameDao.upsert(userId, game);
 
         return game;
     }
 
     @Override
-    public Game getGameById(String gameId) {
-        return gameDao.findById(gameId);
+    public Game getGameById(UUID userId, String gameId) {
+        return gameDao.findById(userId, gameId);
     }
 
     @Override
-    public GameStatus getGameStatus(String gameId) {
-        Game game = getGameById(gameId);
+    public GameStatus getGameStatus(UUID userId, String gameId) {
+        Game game = getGameById(userId, gameId);
         return game.getStatus();
     }
     @Override
-    public Collection<Game> getGames(){
-        return gameDao.findAll();
+    public Collection<Game> getGames(UUID userId){
+        return gameDao.findAll(userId);
     }
 
     @Override
-    public void deleteGameById(String gameId) {
-        gameDao.delete(gameId);
+    public void deleteGameById(UUID userId, String gameId) {
+        gameDao.delete(userId, gameId);
+    }
+
+    @Override
+    public Collection<Game> getOngoingGames(UUID userId) {
+        return getGames(userId)
+                .stream()
+                .filter(game -> game.getStatus() == GameStatus.ONGOING)
+                .toList();
+    }
+
+    @Override
+    public Set<CellPosition> getAllowedMoves(UUID userId, String gameId, CellPosition position) {
+        Game game = gameDao.findById(userId, gameId);
+
+        if (game == null) {
+            throw new IllegalArgumentException("Partie inconnue");
+        }
+
+        Token token = game.getBoard().get(position);
+
+        if (token == null) {
+            throw new IllegalArgumentException(
+                    "Aucun jeton à cette position"
+            );
+        }
+
+        return token.getAllowedMoves();
+    }
+
+    @Override
+    public void playMove(UUID userId, String gameId, CellPosition tokenPosition, CellPosition targetPosition) {
+        Game game = gameDao.findById(userId, gameId);
+
+        if (game == null) {
+            throw new IllegalArgumentException("Partie inconnue");
+        }
+
+        if (!userId.equals(game.getCurrentPlayerId())) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Ce n'est pas votre tour"
+            );
+        }
+
+        Token token = game.getBoard().get(tokenPosition);
+
+        if (token == null) {
+            throw new IllegalArgumentException(
+                    "Aucun jeton à cette position"
+            );
+        }
+
+        try {
+            token.moveTo(targetPosition);
+        } catch (InvalidPositionException e) {
+            System.out.println(e.getMessage());
+        }
+
+        gameDao.upsert(userId, game);
     }
 
 }

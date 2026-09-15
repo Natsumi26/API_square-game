@@ -30,7 +30,7 @@ public class JpaGameDao implements GameDao{
 
 
     @Override
-    public Collection<Game> findAll() {
+    public Collection<Game> findAll(UUID userId) {
 
         return gameEntityRepository.findAll()
                 .stream()
@@ -39,22 +39,24 @@ public class JpaGameDao implements GameDao{
     }
 
     @Override
-    public Game findById(String gameId) {
+    public Game findById(UUID userId, String gameId) {
         return gameEntityRepository.findById(gameId)
                 .map(this::toGame)
                 .orElse(null);
     }
 
     @Override
-    public void upsert(Game game) {
+    public void upsert(UUID userId, Game game) {
         GameEntity entity = GameEntity.fromGame(game);
         gameEntityRepository.save(entity);
     }
 
     @Override
-    public void delete(String gameId) {
+    public void delete(UUID userId, String gameId) {
         gameEntityRepository.deleteById(gameId);
     }
+
+
 
     public Game toGame(GameEntity entity) {
 

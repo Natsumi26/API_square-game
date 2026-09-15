@@ -1,10 +1,8 @@
 package com.square_games.api.dao;
 
 import fr.le_campus_numerique.square_games.engine.*;
-import org.springframework.context.annotation.Profile;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
-import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
@@ -34,7 +32,7 @@ public class JdbcGameDao implements GameDao {
     }
 
     @Override
-    public Collection<Game> findAll() {
+    public Collection<Game> findAll(UUID userId) {
         String sql = "select * from games";
 
 
@@ -44,12 +42,12 @@ public class JdbcGameDao implements GameDao {
         );
 
         return gameIds.stream()
-                .map(this::findById)
+                .map(gameId -> findById(userId, gameId))
                 .toList();
     }
 
     @Override
-    public Game findById(String gameId) {
+    public Game findById(UUID userId, String gameId) {
         String gameSql = "SELECT * FROM games WHERE id = :gameId";
 
         List<GameData> games = jdbcTemplate.query(
@@ -139,7 +137,7 @@ public class JdbcGameDao implements GameDao {
 
     @Override
     @Transactional
-    public void upsert(Game game) {
+    public void upsert(UUID userId, Game game) {
 
         // 1. Enregistrer la partie
         String gameSql = """
@@ -270,7 +268,7 @@ public class JdbcGameDao implements GameDao {
     }
 
     @Override
-    public void delete(String gameId) {
+    public void delete(UUID userId, String gameId) {
         String sql = "delete from games where id = :gameId";
 
         MapSqlParameterSource params = new MapSqlParameterSource()
