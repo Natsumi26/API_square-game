@@ -35,6 +35,7 @@ public class JpaGameDao implements GameDao{
         return gameEntityRepository.findAll()
                 .stream()
                 .map(this::toGame)
+                .filter(game -> game.getPlayerIds().contains(userId))
                 .toList();
     }
 

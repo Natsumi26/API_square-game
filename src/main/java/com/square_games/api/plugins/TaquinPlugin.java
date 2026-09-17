@@ -1,6 +1,8 @@
 package com.square_games.api.plugins;
 
+import fr.le_campus_numerique.square_games.engine.CellPosition;
 import fr.le_campus_numerique.square_games.engine.Game;
+import fr.le_campus_numerique.square_games.engine.Token;
 import fr.le_campus_numerique.square_games.engine.taquin.TaquinGameFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
@@ -44,5 +46,26 @@ public class TaquinPlugin implements GamePlugin {
     @Override
     public String getName(Locale locale) {
         return messageSource.getMessage("game.taquin.name", null, locale);
+    }
+
+    @Override
+    public Set<CellPosition> getAllowedMoves(Game game, CellPosition position) {
+        Token token = game.getBoard().get(position);
+        return token.getAllowedMoves();
+    }
+
+    @Override
+    public String getGameType() {
+        return gameFactory.getGameFactoryId();
+    }
+
+    @Override
+    public Token getTokenToMove(Game game, CellPosition position) {
+        Token token = game.getBoard().get(position);
+        if(token == null){
+            throw new IllegalStateException("Aucun jeton à cette position");
+        }
+
+        return token;
     }
 }

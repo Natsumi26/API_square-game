@@ -1,6 +1,8 @@
 package com.square_games.api.plugins;
 
+import fr.le_campus_numerique.square_games.engine.CellPosition;
 import fr.le_campus_numerique.square_games.engine.Game;
+import fr.le_campus_numerique.square_games.engine.Token;
 import fr.le_campus_numerique.square_games.engine.connectfour.ConnectFourGameFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
@@ -43,5 +45,34 @@ public class ConnectFourPlugin implements GamePlugin {
     public String getName(Locale locale) {
 
         return messageSource.getMessage("game.connectfour.name", null, locale);
+    }
+
+    @Override
+    public Set<CellPosition> getAllowedMoves(Game game, CellPosition position) {
+        return game.getRemainingTokens()
+                .stream()
+                .filter(Token::canMove)
+                .findFirst()
+                .map(Token::getAllowedMoves)
+                .orElseThrow(() ->
+                        new IllegalArgumentException("Aucun jeton ne peut jouer")
+                );
+    }
+
+    @Override
+    public String getGameType() {
+
+        return gameFactory.getGameFactoryId();
+    }
+
+    @Override
+    public Token getTokenToMove(Game game, CellPosition position) {
+        return game.getRemainingTokens()
+                .stream()
+                .filter(Token::canMove)
+                .findFirst()
+                .orElseThrow(() ->
+                        new IllegalArgumentException("Aucun jeton ne peut jouer")
+                );
     }
 }
