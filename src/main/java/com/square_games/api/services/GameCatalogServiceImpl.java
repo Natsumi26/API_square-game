@@ -9,11 +9,11 @@ import java.util.Locale;
 
 
 @Service
-public class GameCatalogImpl implements GameCatalog {
+public class GameCatalogServiceImpl implements GameCatalogService {
 
     private final List<GamePlugin> gamePlugins;
 
-    public GameCatalogImpl(List<GamePlugin> gamePlugins) {
+    public GameCatalogServiceImpl(List<GamePlugin> gamePlugins) {
         this.gamePlugins = gamePlugins;
     }
 
