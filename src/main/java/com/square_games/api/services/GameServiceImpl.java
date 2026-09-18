@@ -30,12 +30,7 @@ public class GameServiceImpl implements GameService  {
     @Override
     public Game createGame(UUID userId, GameCreationParams params) {
 
-        if (!userClient.isUserValid(userId)) {
-            throw new ResponseStatusException(
-                    HttpStatus.UNAUTHORIZED,
-                    "Utilisateur inconnu"
-            );
-        }
+
 
         GamePlugin plugin = gamePlugins.stream()
                 .filter(p -> p.getClass().getSimpleName()
@@ -65,57 +60,31 @@ public class GameServiceImpl implements GameService  {
 
     @Override
     public Game getGameById(UUID userId, String gameId) {
-        if (!userClient.isUserValid(userId)) {
-            throw new ResponseStatusException(
-                    HttpStatus.UNAUTHORIZED,
-                    "Utilisateur inconnu"
-            );
-        }
+
 
         return gameDao.findById(userId, gameId);
     }
 
     @Override
     public GameStatus getGameStatus(UUID userId, String gameId) {
-        if (!userClient.isUserValid(userId)) {
-            throw new ResponseStatusException(
-                    HttpStatus.UNAUTHORIZED,
-                    "Utilisateur inconnu"
-            );
-        }
+
         Game game = getGameById(userId, gameId);
         return game.getStatus();
     }
     @Override
     public Collection<Game> getGames(UUID userId){
-        if (!userClient.isUserValid(userId)) {
-            throw new ResponseStatusException(
-                    HttpStatus.UNAUTHORIZED,
-                    "Utilisateur inconnu"
-            );
-        }
         return gameDao.findAll(userId);
     }
 
     @Override
     public void deleteGameById(UUID userId, String gameId) {
-        if (!userClient.isUserValid(userId)) {
-            throw new ResponseStatusException(
-                    HttpStatus.UNAUTHORIZED,
-                    "Utilisateur inconnu"
-            );
-        }
+
         gameDao.delete(userId, gameId);
     }
 
     @Override
     public Collection<Game> getOngoingGames(UUID userId) {
-        if (!userClient.isUserValid(userId)) {
-            throw new ResponseStatusException(
-                    HttpStatus.UNAUTHORIZED,
-                    "Utilisateur inconnu"
-            );
-        }
+
         return getGames(userId)
                 .stream()
                 .filter(game -> game.getStatus() == GameStatus.ONGOING)
@@ -124,12 +93,6 @@ public class GameServiceImpl implements GameService  {
 
     @Override
     public Set<CellPosition> getAllowedMoves(UUID userId, String gameId, CellPosition position) {
-        if (!userClient.isUserValid(userId)) {
-            throw new ResponseStatusException(
-                    HttpStatus.UNAUTHORIZED,
-                    "Utilisateur inconnu"
-            );
-        }
         Game game = gameDao.findById(userId, gameId);
 
         if (game == null) {
@@ -148,12 +111,6 @@ public class GameServiceImpl implements GameService  {
     @Override
     public void playMove(UUID userId, String gameId, CellPosition tokenPosition, CellPosition targetPosition) {
 
-        if (!userClient.isUserValid(userId)) {
-            throw new ResponseStatusException(
-                    HttpStatus.UNAUTHORIZED,
-                    "Utilisateur inconnu"
-            );
-        }
 
         Game game = gameDao.findById(userId, gameId);
 

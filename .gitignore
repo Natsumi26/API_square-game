@@ -34,5 +34,6 @@ build/
 
 ### Configuration locale / secrets ###
 application-h2.properties
+application-local.properties
 application-mysql.properties
 .env

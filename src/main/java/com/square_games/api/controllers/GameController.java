@@ -10,6 +10,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collection;
@@ -36,7 +38,8 @@ public class GameController {
             @ApiResponse(responseCode = "401", description = "Utilisateur inconnu")
     })
     @GetMapping
-    public Collection<Game> getGames(@RequestHeader("X-UserId") UUID userId) {
+    public Collection<Game> getGames() {
+        UUID userId = getCurrentUserId();
         return gameService.getGames(userId);
     }
 
@@ -51,7 +54,8 @@ public class GameController {
             @ApiResponse(responseCode = "401", description = "Utilisateur inconnu")
     })
     @PostMapping
-    public Game createGame(@RequestBody GameCreationParams params, @RequestHeader("X-UserId") UUID userId) {
+    public Game createGame(@RequestBody GameCreationParams params) {
+        UUID userId = getCurrentUserId();
         return gameService.createGame(userId, params);
     }
 
@@ -65,7 +69,8 @@ public class GameController {
             @ApiResponse(responseCode = "404", description = "Partie inconnue")
     })
     @GetMapping("/{gameId}")
-    public Game getGame(@PathVariable String gameId,@RequestHeader("X-UserId") UUID userId) {
+    public Game getGame(@PathVariable String gameId) {
+        UUID userId = getCurrentUserId();
         return gameService.getGameById(userId, gameId);
     }
 
@@ -79,7 +84,8 @@ public class GameController {
             @ApiResponse(responseCode = "404", description = "Partie inconnue")
     })
     @GetMapping("/status/{gameId}")
-    public GameStatus getGameStatus(@PathVariable String gameId,@RequestHeader("X-UserId") UUID userId) {
+    public GameStatus getGameStatus(@PathVariable String gameId) {
+        UUID userId = getCurrentUserId();
         return gameService.getGameStatus(userId,gameId);
     }
 
@@ -92,7 +98,8 @@ public class GameController {
             @ApiResponse(responseCode = "401", description = "Utilisateur inconnu")
     })
     @GetMapping("/ongoing")
-    public Collection<Game> getOngoingGames(@RequestHeader("X-UserId") UUID userId) {
+    public Collection<Game> getOngoingGames() {
+        UUID userId = getCurrentUserId();
         return gameService.getOngoingGames(userId);
     }
 
@@ -106,7 +113,8 @@ public class GameController {
             @ApiResponse(responseCode = "404", description = "Partie inconnue")
     })
     @DeleteMapping("/{gameId}")
-    public void deleteGame(@PathVariable String gameId,@RequestHeader("X-UserId") UUID userId) {
+    public void deleteGame(@PathVariable String gameId) {
+        UUID userId = getCurrentUserId();
         gameService.deleteGameById(userId, gameId);
     }
 
@@ -120,8 +128,8 @@ public class GameController {
             @ApiResponse(responseCode = "404", description = "Partie inconnue")
     })
     @GetMapping("/{gameId}/possiblemoves")
-    public Set<CellPosition> getAllowedMoves(@RequestHeader("X-UserId") UUID userId, @PathVariable String gameId) {
-
+    public Set<CellPosition> getAllowedMoves( @PathVariable String gameId) {
+        UUID userId = getCurrentUserId();
         return gameService.getAllowedMoves(
                 userId,
                 gameId,
@@ -134,9 +142,9 @@ public class GameController {
             description = "Retourne les positions accessibles par le jeton situé à la position indiquée."
     )
     @GetMapping("/{gameId}/tokens/{x}/{y}/possiblemoves")
-    public Set<CellPosition> getAllowedMoves(@RequestHeader("X-UserId") UUID userId, @PathVariable String gameId, @PathVariable int x, @PathVariable int y) {
+    public Set<CellPosition> getAllowedMoves( @PathVariable String gameId, @PathVariable int x, @PathVariable int y) {
         CellPosition position = new CellPosition(x, y);
-
+        UUID userId = getCurrentUserId();
         return gameService.getAllowedMoves(
                 userId,
                 gameId,
@@ -156,13 +164,21 @@ public class GameController {
             @ApiResponse(responseCode = "404", description = "Partie inconnue")
     })
     @PostMapping("/{gameId}/moves")
-    public void playMove(@RequestHeader("X-UserId") UUID userId, @PathVariable String gameId, @RequestBody MoveParams params) {
+    public void playMove( @PathVariable String gameId, @RequestBody MoveParams params) {
+        UUID userId = getCurrentUserId();
         gameService.playMove(
                 userId,
                 gameId,
                 params.getFrom(),
                 params.getTo()
         );
+    }
+
+    private UUID getCurrentUserId() {
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
+
+        return (UUID) authentication.getPrincipal();
     }
 
 }
