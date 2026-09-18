@@ -10,6 +10,8 @@ Les jeux sont gérés à travers des plugins afin de permettre à l'API de prend
 
 L'application utilise une base de données MySQL pour la persistance des parties mais peut également utiliser une base de données H2 en mémoire.
 
+L'application utilise l'API Users pour l'authentification et les deux applications utilisent des JWT signés avec la même clé secrète.
+
 ---
 
 ## 🛠️ Technologies
@@ -17,6 +19,8 @@ L'application utilise une base de données MySQL pour la persistance des parties
 * Java
 * Spring Boot
 * Spring Web
+* Spring Security
+* JWT avec JJWT
 * Spring Data JPA
 * MySQL
 * Docker / Docker Compose
@@ -27,6 +31,20 @@ L'application utilise une base de données MySQL pour la persistance des parties
 ---
 
 ## 📁 Architecture
+
+L'application suit une architecture en couches :
+
+```text
+GameController
+      ↓
+GameService
+      ↓
+GameDao
+      ↓
+JPA / JDBC
+      ↓
+MySQL
+```
 
 L'application est organisée notamment autour des éléments suivants :
 
@@ -43,6 +61,7 @@ src/main/java/com/square_games/api
 ├── services
 │   ├── GameCatalogService
 │   ├── GameCatalogServiceImpl
+│   ├── JwtService
 │   ├── GameService
 │   └── GameServiceImpl
 │
@@ -67,12 +86,17 @@ src/main/java/com/square_games/api
 │   ├── ConnectFourPlugin
 │   └── TaquinPlugin
 │
-└── config
+├── security
+│   └── JwtAuthenticationFilter
+│
+└── configuration
+│   ├── SecurityConfig
     └── GameConfiguration
 
 src/main/resources
 │
 ├── application.properties (dispo sur le git)
+├── application-local.properties (dans le gitignore: contient la clé secret jwt)
 ├── application-h2.properties (dans le gitignore : configuration de la BDD H2 (url, password, user, ...))
 ├── application-mysql.properties (dans le gitignore : configuration de la BDD MySQL (url, password, user, ...))
 └── messages.properties (dispo sur le git : conserve la traduction)
@@ -83,67 +107,48 @@ racine du projet
 │    └── init.sql (script pour créer la BDD users)
 │
 ├── .env (dans le gitIgnore : contient les donnée sensible pour la connexion bdd pour docker)
-├── env-example (dispo sur git : modèle du .env)
+├── .env-example (dispo sur git : modèle du .env)
 └──  docker-compose.yml (dispo sur git : configuration pour les container docker)
 
 ```
 
 Le projet utilise le principe de **DAO** pour séparer la persistance de la logique métier.
 
-Les règles spécifiques à chaque jeu sont gérées par les `GamePlugin`.
+Les jeux sont gérés par des plugins (`GamePlugin`) afin de prendre en charge plusieurs types de jeux, notamment :
+
+- Tic-Tac-Toe
+- Taquin
+- Connect Four
 
 ---
 
 # 🚀 Installation et démarrage
 
-## 1. Prérequis
+## Prérequis
 
-Avant de démarrer l'application, installer :
+Avant de lancer l'application :
 
-* Java
-* Maven
-* Docker
-* Docker Compose
-* MySQL (si vous ne l'utilisez pas avec Docker)
+- Java installé
+- Maven ou Maven Wrapper
+- Docker et Docker Compose
+- MySQL lancé via Docker
+- API Users disponible sur le port `8081`
 
-Vérifier les installations :
+## Configuration
 
-```bash
-java -version
-mvn -version
-docker --version
-docker compose version
+L'API Games utilise le port `8080`.
+
+```properties
+server.port=8080
 ```
 
----
+La clé secrète JWT doit être **strictement identique** à celle utilisée par l'API Users :
 
-## 2. Démarrer la base de données
-
-La base MySQL est prévue pour fonctionner avec Docker Compose.
-
-Depuis le dossier contenant le fichier `docker-compose.yml` :
-
-```bash
-docker compose up -d
+```properties
+jwt.secret=VOTRE_SECRET
 ```
 
-Vérifier que le conteneur fonctionne :
-
-```bash
-docker ps
-```
-
-Le conteneur MySQL doit être démarré avant de lancer l'API Games.
-
-Pour arrêter les conteneurs :
-
-```bash
-docker compose down
-```
-
----
-
-## 3. Configuration de l'application
+Ne pas versionner une vraie clé secrète dans Git, utiliser le fichier `application-local.properties` pour la clé secrete.
 
 L'application utilise les propriétés Spring pour configurer la connexion à la base de données.
 
@@ -161,11 +166,30 @@ L'URL de l'API Users est également configurée dans `application.properties` :
 users.api.url=http://localhost:8081
 ```
 
-L'API Games utilise cette URL pour vérifier qu'un utilisateur fourni dans `X-UserId` existe bien dans l'API Users.
+---
+
+## 2. Démarrer la base de données
+
+La base MySQL est prévue pour fonctionner avec Docker Compose.
+
+Depuis le dossier contenant le fichier `docker-compose.yml` :
+
+```bash
+docker compose up -d
+```
+
+Le conteneur MySQL doit être démarré avant de lancer l'API Games.
+
+Pour arrêter les conteneurs :
+
+```bash
+docker compose down
+```
 
 ---
 
-## 4. Démarrer l'API Users
+
+## 3. Démarrer l'API Users
 
 L'API Games communique avec une seconde application dédiée à la gestion des utilisateurs.
 
@@ -221,204 +245,97 @@ Swagger permet notamment de consulter et tester les endpoints de l'API.
 
 ---
 
-# 🔐 Authentification utilisateur
+## Authentification JWT
 
-L'utilisateur est identifié grâce au header HTTP :
+Les endpoints de l'API Games sont protégés par Spring Security.
 
-```text
-X-UserId
+Il faut d'abord obtenir un JWT auprès de l'API Users :
+
+```http
+POST http://localhost:8081/auth/login
+Content-Type: application/json
 ```
 
 Exemple :
 
-```http
-X-UserId: 550e8400-e29b-41d4-a716-446655440000
+```json
+{
+  "username": "Alice",
+  "password": "motdepasse"
+}
 ```
 
-Avant certaines opérations, l'API Games vérifie que cet utilisateur existe auprès de l'API Users.
+Le token retourné doit ensuite être envoyé dans les requêtes Games :
+
+```http
+Authorization: Bearer <JWT>
+```
+
+Le JWT contient notamment :
+
+```json
+{
+  "sub": "Alice",
+  "userId": "UUID_DE_L_UTILISATEUR",
+  "role": "ROLE_USER"
+}
+```
+
+L'API Games valide localement le JWT et récupère le `userId` directement depuis son contenu.
+
+Il n'y a donc plus d'appel à l'API Users pour vérifier l'utilisateur à chaque requête.
 
 ---
 
-# 🎮 Endpoints principaux
+## Endpoints principaux
 
-## Lister les parties
+### Jeux
+
+| Méthode | Endpoint | Description |
+|---|---|---|
+| GET | `/games` | Liste les jeux de l'utilisateur connecté |
+| POST | `/games` | Crée une nouvelle partie |
+| GET | `/games/{gameId}` | Récupère une partie |
+| GET | `/games/status/{gameId}` | Récupère le statut d'une partie |
+| GET | `/games/ongoing` | Liste les parties en cours |
+| DELETE | `/games/{gameId}` | Supprime une partie |
+
+### Mouvements
+
+| Méthode | Endpoint | Description |
+|---|---|---|
+| GET | `/games/{gameId}/tokens/{x}/{y}/moves` | Récupère les mouvements autorisés pour un jeton |
+| GET | `/games/{gameId}/possiblemoves` | Récupère les mouvements possibles |
+| POST | `/games/{gameId}/moves` | Effectue un mouvement |
+
+Les endpoints exacts de mouvements dépendent de la version actuelle du contrôleur.
+
+## Exemple de création d'une partie
 
 ```http
-GET /games
+POST http://localhost:8080/games
+Authorization: Bearer <JWT>
+Content-Type: application/json
 ```
 
-Header :
+Exemple minimal :
 
-```http
-X-UserId: <UUID>
+```json
+{
+  "type": "tictactoe"
+}
 ```
 
-Retourne les parties auxquelles participe l'utilisateur.
-
----
-
-## Créer une partie
-
-```http
-POST /games
-```
-
-Header :
-
-```http
-X-UserId: <UUID>
-```
-
-Exemple :
+Des paramètres optionnels peuvent être utilisés selon le jeu :
 
 ```json
 {
   "type": "tictactoe",
   "playerCount": 2,
   "boardSize": 3,
-  "opponentIds": [
-    "650e8400-e29b-41d4-a716-446655440000"
-  ]
+  "opponentIds": []
 }
 ```
-
----
-
-## Obtenir une partie
-
-```http
-GET /games/{gameId}
-```
-
-Header :
-
-```http
-X-UserId: <UUID>
-```
-
----
-
-## Obtenir le statut d'une partie
-
-```http
-GET /games/status/{gameId}
-```
-
-Header :
-
-```http
-X-UserId: <UUID>
-```
-
----
-
-## Lister les parties en cours
-
-```http
-GET /games/ongoing
-```
-
-Header :
-
-```http
-X-UserId: <UUID>
-```
-
-Retourne uniquement les parties :
-
-* auxquelles participe l'utilisateur ;
-* dont le statut est `ONGOING`.
-
----
-
-## Supprimer une partie
-
-```http
-DELETE /games/{gameId}
-```
-
-Header :
-
-```http
-X-UserId: <UUID>
-```
-
----
-
-# ♟️ Coups possibles
-
-Pour les jeux comme **Tic-Tac-Toe** et **Connect Four** :
-
-```http
-GET /games/{gameId}/possiblemoves
-```
-
-Header :
-
-```http
-X-UserId: <UUID>
-```
-
-Pour le **Taquin**, une position de jeton est nécessaire :
-
-```http
-GET /games/{gameId}/tokens/{x}/{y}/possiblemoves
-```
-
-Exemple :
-
-```http
-GET /games/123/tokens/1/2/possiblemoves
-```
-
----
-
-# 🎯 Jouer un coup
-
-```http
-POST /games/{gameId}/moves
-```
-
-Header :
-
-```http
-X-UserId: <UUID>
-Content-Type: application/json
-```
-
-Exemple de `MoveParams` :
-
-Avec position de départ non null (taquin) :
-
-```json
-{
-  "from": {
-    "x": 1,
-    "y": 2
-  },
-  "to": {
-    "x": 1,
-    "y": 3
-  }
-}
-```
-
-Avec position de départ null (Connect four et tic tac toe) :
-
-```json
-{
-  "from": null,
-  "to": {
-    "x": 1,
-    "y": 3
-  }
-}
-```
-
-La structure de `MoveParams` dépend du type de jeu.
-
-Le moteur du jeu vérifie ensuite si le déplacement demandé est autorisé.
-
 ---
 
 # 🧩 Gestion des jeux
@@ -435,51 +352,49 @@ Le service principal reste ainsi indépendant du type de jeu.
 
 ---
 
-# 💾 Persistance
+## Sécurité
 
-Les parties sont persistées dans MySQL.
+L'API est configurée en mode **stateless**.
 
-L'application utilise :
-
-* Spring Data JPA ;
-* `GameDao` pour abstraire la persistance ;
-* `JpaGameDao` pour l'implémentation JPA.
-
-Les parties peuvent être reconstruites à partir des données persistées grâce aux `GameFactory` du moteur de jeux.
-
----
-
-# 🐳 Commandes Docker utiles
-
-Démarrer les services :
-
-```bash
-docker compose up -d
+```text
+Client
+  │
+  │ Authorization: Bearer JWT
+  ▼
+JwtAuthenticationFilter
+  │
+  ├── vérification du JWT
+  ├── récupération du userId
+  ▼
+SecurityContext
+  │
+  ▼
+GameController
+  │
+  ▼
+GameService
 ```
 
-Afficher les conteneurs :
+L'ancien mécanisme basé sur :
 
-```bash
-docker ps
+```http
+X-UserId: <UUID>
 ```
 
-Afficher les logs :
+n'est plus utilisé.
 
-```bash
-docker compose logs
-```
+## Persistance
 
-Afficher les logs de MySQL :
+Les parties sont persistées en base de données MySQL.
 
-```bash
-docker compose logs mysql
-```
+La persistance utilise notamment :
 
-Arrêter les services :
+- `GameEntity`
+- `GameTokenEntity`
+- `GameEntityRepository`
+- `GameDao`
 
-```bash
-docker compose down
-```
+Les jeux sont associés à l'identifiant de l'utilisateur connecté.
 
 ---
 
@@ -498,39 +413,3 @@ http://localhost:8080/swagger-ui/index.html
 ```
 
 ---
-
-# 📌 Résumé du démarrage
-
-Dans l'ordre :
-
-```text
-1. Démarrer Docker
-       ↓
-2. Démarrer MySQL
-       ↓
-3. Démarrer l'API Users sur le port 8081
-       ↓
-4. Démarrer l'API Games sur le port 8080
-       ↓
-5. Ouvrir Swagger
-       ↓
-6. Tester les endpoints
-```
-
-Swagger :
-
-```text
-http://localhost:8080/swagger-ui/index.html
-```
-
-API Games :
-
-```text
-http://localhost:8080
-```
-
-API Users :
-
-```text
-http://localhost:8081
-```
