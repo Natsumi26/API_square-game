@@ -413,3 +413,26 @@ http://localhost:8080/swagger-ui/index.html
 ```
 
 ---
+
+## Projets associés
+
+Cette application fonctionne avec l'API Users :
+
+```text
+API Users
+Port : 8081
+
+API Games
+Port : 8080
+```
+
+Le flux d'authentification est :
+
+```text
+1. Login → API Users
+2. Réception du JWT
+3. Requête → API Games avec Bearer Token
+4. Validation locale du JWT
+5. Extraction du userId
+6. Accès aux jeux de l'utilisateur
+```
