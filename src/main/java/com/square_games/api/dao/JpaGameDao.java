@@ -84,7 +84,41 @@ public class JpaGameDao implements GameDao{
                 .map(this::toTokenPosition)
                 .toList();
 
+        UUID gameId = UUID.fromString(entity.id);
+        /*
+         * Reconstruction spécifique du Taquin.
+         */
+        if ("15 puzzle".equals(entity.factoryId)) {
+
+            if (players.size() != 1) {
+                throw new IllegalStateException(
+                        "Taquin must have exactly one player"
+                );
+            }
+
+            List<TaquinGameReconstructed.TileData> tokens =
+                    boardTokens.stream()
+                            .map(token -> new TaquinGameReconstructed.TileData(
+                                    token.tokenName(),
+                                    token.x(),
+                                    token.y()
+                            ))
+                            .toList();
+
+            return new TaquinGameReconstructed(
+                    gameId,
+                    players.get(0),
+                    entity.boardSize,
+                    tokens
+            );
+        }
+
+
+        /*
+         * Reconstruction normale pour les autres jeux.
+         */
         try {
+
 
             return factory.createGameWithIds(
                     UUID.fromString(entity.id),
