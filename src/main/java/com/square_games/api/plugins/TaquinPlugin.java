@@ -51,6 +51,9 @@ public class TaquinPlugin implements GamePlugin {
     @Override
     public Set<CellPosition> getAllowedMoves(Game game, CellPosition position) {
         Token token = game.getBoard().get(position);
+        if (token == null) {
+            return Set.of();
+        }
         return token.getAllowedMoves();
     }
 
