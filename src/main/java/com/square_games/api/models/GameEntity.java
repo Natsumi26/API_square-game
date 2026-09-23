@@ -4,6 +4,7 @@ import fr.le_campus_numerique.square_games.engine.*;
 
 import jakarta.persistence.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -27,10 +28,28 @@ public class GameEntity {
         entity.id = game.getId().toString();
         entity.factoryId = game.getFactoryId();
         entity.boardSize = game.getBoardSize();
-        entity.playerIds = game.getPlayerIds()
-                .stream() // transforme en flux
-                .map(UUID::toString)// transforme le type UUId en string
-                .collect(Collectors.joining(",")); // recupere les données et défini la "," comme séparateur
+
+        System.out.println("===== JOUEURS SAUVEGARDÉS =====");
+        System.out.println(game.getPlayerIds());
+        System.out.println("===============================");
+        System.out.println("Factory : " + game.getFactoryId());
+        System.out.println("Players : " + game.getPlayerIds());
+        System.out.println("Current : " + game.getCurrentPlayerId());
+
+        List<UUID> playerIds = new ArrayList<>(game.getPlayerIds());
+
+        if ("connectfour".equals(game.getFactoryId())) {
+            UUID currentPlayerId = game.getCurrentPlayerId();
+
+            if (currentPlayerId != null && currentPlayerId.equals(playerIds.get(0))) {
+                // getPlayerIds() retourne le joueur courant en premier.
+                // Pour Connect Four, on veut conserver l'ordre R puis Y.
+                playerIds = playerIds.reversed();
+            }
+        }
+        entity.playerIds = playerIds.stream()
+                .map(UUID::toString)
+                .collect(Collectors.joining(","));
 
         entity.tokens = game.getBoard() // retourne <CellPosition, token>
                 .values() // recupere que les tokens

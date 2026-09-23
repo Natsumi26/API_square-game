@@ -49,6 +49,17 @@ public class JpaGameDao implements GameDao{
     @Override
     public void upsert(UUID userId, Game game) {
         GameEntity entity = GameEntity.fromGame(game);
+        System.out.println("===== SAUVEGARDE CONNECT FOUR =====");
+
+        game.getBoard().forEach((position, token) -> {
+            System.out.println(
+                    "Position : " + position
+                            + " | nom : " + token.getName()
+                            + " | owner : " + token.getOwnerId()
+            );
+        });
+
+        System.out.println("==================================");
         gameEntityRepository.save(entity);
     }
 
@@ -85,6 +96,15 @@ public class JpaGameDao implements GameDao{
                 .toList();
 
         UUID gameId = UUID.fromString(entity.id);
+
+        if ("connect4".equals(entity.factoryId)) {
+
+            return ConnectFourGameReconstructed.reconstruct(
+                    gameId,
+                    new LinkedHashSet<>(players),
+                    entity.tokens
+            );
+        }
         /*
          * Reconstruction spécifique du Taquin.
          */
@@ -117,7 +137,20 @@ public class JpaGameDao implements GameDao{
         /*
          * Reconstruction normale pour les autres jeux.
          */
+
         try {
+            System.out.println("===== RECONSTRUCTION CONNECT FOUR =====");
+            System.out.println("Players : " + players);
+
+            boardTokens.forEach(token ->
+                    System.out.println(
+                            "Token : " + token.tokenName()
+                                    + " | owner : " + token.owner()
+                                    + " | position : (" + token.x() + "," + token.y() + ")"
+                    )
+            );
+
+            System.out.println("======================================");
 
 
             return factory.createGameWithIds(

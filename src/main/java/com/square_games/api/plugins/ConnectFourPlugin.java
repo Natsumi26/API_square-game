@@ -67,6 +67,21 @@ public class ConnectFourPlugin implements GamePlugin {
 
     @Override
     public Token getTokenToMove(Game game, CellPosition position) {
+        System.out.println("===== CONNECT FOUR =====");
+        System.out.println("Current player : " + game.getCurrentPlayerId());
+
+        game.getRemainingTokens().stream()
+                .limit(6)
+                .forEach(token ->
+                        System.out.println(
+                                "Token : " + token.getName()
+                                        + " / owner : " + token.getOwnerId()
+                                        + " / canMove : " + token.canMove()
+                        )
+                );
+
+        System.out.println("========================");
+
         return game.getRemainingTokens()
                 .stream()
                 .filter(Token::canMove)
