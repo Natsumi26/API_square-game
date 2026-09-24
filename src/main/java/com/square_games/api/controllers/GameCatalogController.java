@@ -1,5 +1,6 @@
 package com.square_games.api.controllers;
 
+import com.square_games.api.DTO.GameTypeDto;
 import com.square_games.api.services.GameCatalogService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -31,7 +32,7 @@ public class GameCatalogController {
             @ApiResponse(responseCode = "200", description = "Liste des jeux récupérée"),
     })
     @GetMapping
-    public Collection<String> getGames(Locale locale) {
+    public Collection<GameTypeDto> getGames(Locale locale) {
         return gameCatalogService.getAvailableGames(locale);
     }
 }

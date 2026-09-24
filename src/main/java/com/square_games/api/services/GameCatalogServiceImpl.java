@@ -1,5 +1,6 @@
 package com.square_games.api.services;
 
+import com.square_games.api.DTO.GameTypeDto;
 import com.square_games.api.plugins.GamePlugin;
 import org.springframework.stereotype.Service;
 
@@ -19,10 +20,13 @@ public class GameCatalogServiceImpl implements GameCatalogService {
 
 
     @Override
-    public Collection<String> getAvailableGames(Locale locale) {
+    public Collection<GameTypeDto> getAvailableGames(Locale locale) {
 
         return gamePlugins.stream()
-                .map(plugin -> plugin.getName(locale))
+                .map(plugin -> new GameTypeDto(
+                        plugin.getGameType(),
+                        plugin.getName(Locale.FRENCH)
+                ))
                 .toList();
     }
 }
