@@ -192,4 +192,7 @@ public class ConnectFourGameReconstructed implements Game {
                 game
         );
     }
+    public List<Token> getWinningLine() {
+        return game.getWinningLine();
+    }
 }

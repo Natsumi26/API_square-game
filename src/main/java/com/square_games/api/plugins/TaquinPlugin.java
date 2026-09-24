@@ -9,6 +9,7 @@ import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Component;
 
 import java.util.Locale;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -70,5 +71,10 @@ public class TaquinPlugin implements GamePlugin {
         }
 
         return token;
+    }
+
+    @Override
+    public Optional<UUID> getWinner(Game game) {
+        return Optional.empty();
     }
 }

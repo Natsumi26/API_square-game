@@ -2,6 +2,7 @@ package com.square_games.api.plugins;
 
 import fr.le_campus_numerique.square_games.engine.CellPosition;
 import fr.le_campus_numerique.square_games.engine.Game;
+import fr.le_campus_numerique.square_games.engine.GameStatus;
 import fr.le_campus_numerique.square_games.engine.Token;
 import fr.le_campus_numerique.square_games.engine.tictactoe.TicTacToeGameFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -9,6 +10,7 @@ import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Component;
 
 import java.util.Locale;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -75,5 +77,14 @@ public class TicTacToePlugin implements GamePlugin {
                 .orElseThrow(() ->
                         new IllegalArgumentException("Aucun jeton ne peut jouer")
                 );
+    }
+
+    @Override
+    public Optional<UUID> getWinner(Game game) {
+        if (game.getStatus() != GameStatus.TERMINATED) {
+            return Optional.empty();
+        }
+
+        return Optional.ofNullable(game.getCurrentPlayerId());
     }
 }

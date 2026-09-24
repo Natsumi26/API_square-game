@@ -1,6 +1,7 @@
 package com.square_games.api.services;
 
 import com.square_games.api.DTO.GameCreationParams;
+import com.square_games.api.DTO.GameResponseDto;
 import com.square_games.api.clients.UserClient;
 import com.square_games.api.dao.GameDao;
 import com.square_games.api.plugins.GamePlugin;
@@ -59,16 +60,37 @@ public class GameServiceImpl implements GameService  {
     }
 
     @Override
-    public Game getGameById(UUID userId, String gameId) {
+    public GameResponseDto getGameById(UUID userId, String gameId) {
+        Game game = gameDao.findById(userId, gameId);
 
+        if (game == null) {
+            throw new IllegalArgumentException("Partie inconnue");
+        }
 
-        return gameDao.findById(userId, gameId);
+        GamePlugin plugin = gamePlugins.stream()
+                .filter(p -> p.getGameType()
+                        .equals(game.getFactoryId()))
+                .findFirst()
+                .orElseThrow(() ->
+                        new IllegalArgumentException("Plugin de jeu inconnu")
+                );
+
+        Optional<UUID> winner = plugin.getWinner(game);
+
+        return new GameResponseDto(
+                game,
+                winner.orElse(null)
+        );
     }
 
     @Override
     public GameStatus getGameStatus(UUID userId, String gameId) {
 
-        Game game = getGameById(userId, gameId);
+        Game game = gameDao.findById(userId, gameId);
+
+        if (game == null) {
+            throw new IllegalArgumentException("Partie inconnue");
+        }
         return game.getStatus();
     }
     @Override
@@ -139,6 +161,8 @@ public class GameServiceImpl implements GameService  {
         } catch (InvalidPositionException e) {
             System.out.println(e.getMessage());
         }
+
+        Optional<UUID> winner = plugin.getWinner(game);
 
         gameDao.upsert(userId, game);
     }

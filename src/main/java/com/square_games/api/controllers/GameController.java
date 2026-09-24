@@ -1,6 +1,7 @@
 package com.square_games.api.controllers;
 
 import com.square_games.api.DTO.GameCreationParams;
+import com.square_games.api.DTO.GameResponseDto;
 import com.square_games.api.DTO.MoveParams;
 import com.square_games.api.services.GameService;
 import fr.le_campus_numerique.square_games.engine.CellPosition;
@@ -68,8 +69,9 @@ public class GameController {
             @ApiResponse(responseCode = "401", description = "Utilisateur inconnu"),
             @ApiResponse(responseCode = "404", description = "Partie inconnue")
     })
+
     @GetMapping("/{gameId}")
-    public Game getGame(@PathVariable String gameId) {
+    public GameResponseDto getGame(@PathVariable String gameId) {
         UUID userId = getCurrentUserId();
         return gameService.getGameById(userId, gameId);
     }

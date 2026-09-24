@@ -2,6 +2,7 @@ package com.square_games.api.services;
 
 
 import com.square_games.api.DTO.GameCreationParams;
+import com.square_games.api.DTO.GameResponseDto;
 import fr.le_campus_numerique.square_games.engine.CellPosition;
 import fr.le_campus_numerique.square_games.engine.Game;
 import fr.le_campus_numerique.square_games.engine.GameStatus;
@@ -15,7 +16,7 @@ public interface GameService {
 
     Game createGame(UUID userId, GameCreationParams params);
 
-    Game getGameById(UUID userId,String gameId);
+    GameResponseDto getGameById(UUID userId, String gameId);
 
     GameStatus getGameStatus(UUID userId,String gameId);
 
