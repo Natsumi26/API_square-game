@@ -34,8 +34,8 @@ public class GameServiceImpl implements GameService  {
 
 
         GamePlugin plugin = gamePlugins.stream()
-                .filter(p -> p.getClass().getSimpleName()
-                        .equalsIgnoreCase(params.getType() + "Plugin"))
+                .filter(p -> p.getGameType()
+                        .equalsIgnoreCase(params.getType()))
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Type de jeu inconnu"));
 

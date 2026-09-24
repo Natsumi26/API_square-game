@@ -69,6 +69,16 @@ public class GameEntity {
                     tokenEntity.y = position.y();
 
                     tokenEntity.removed = false;
+                    System.out.println(
+                            "TOKEN SAUVEGARDÉ : "
+                                    + tokenEntity.name
+                                    + " | owner=" + tokenEntity.ownerId
+                                    + " | position=("
+                                    + tokenEntity.x
+                                    + ","
+                                    + tokenEntity.y
+                                    + ")"
+                    );
                     return tokenEntity;
                 })
                 .toList();
