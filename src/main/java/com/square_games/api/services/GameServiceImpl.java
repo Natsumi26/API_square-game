@@ -21,10 +21,13 @@ public class GameServiceImpl implements GameService  {
 
     private final UserClient userClient;
 
-    public GameServiceImpl(GameDao gameDao, List<GamePlugin> gamePlugins, UserClient userClient) {
+    private final GameSocketService gameWebSocketService;
+
+    public GameServiceImpl(GameDao gameDao, List<GamePlugin> gamePlugins, UserClient userClient, GameSocketService gameWebSocketService) {
         this.gameDao = gameDao;
         this.gamePlugins = gamePlugins;
         this.userClient = userClient;
+        this.gameWebSocketService = gameWebSocketService;
     }
 
 
@@ -165,6 +168,11 @@ public class GameServiceImpl implements GameService  {
         Optional<UUID> winner = plugin.getWinner(game);
 
         gameDao.upsert(userId, game);
+
+        gameWebSocketService.notifyGameUpdate(
+                gameId,
+                game
+        );
     }
 
 }
